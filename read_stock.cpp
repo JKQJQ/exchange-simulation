@@ -21,12 +21,13 @@ struct order {
 int main() {
     int lines = 10000;
     struct order* t = new struct order[lines];
-    std::ifstream infile("/data/team-10/trade_merge/stock0",
+    std::ifstream infile("/data/team-10/medium/trade_merge/stock0",
     std::ios::in | std::ios::binary);
 
     infile.read((char *)t, sizeof(order) * lines);
     infile.close();
-    for(int i = 0; i < 20; ++i){
+    int L = 9310;
+    for(int i = L; i < L + 20; ++i){
         unsigned char ch = (t + i) ->combined;
         int stk_code = (ch >> 4) & 15;
         int type = ch & 7;

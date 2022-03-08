@@ -12,17 +12,30 @@ struct trade {
 }__attribute__((packed));
 
 int main() {
-    int lines = 100;
-    struct trade* t = new struct trade[lines];
-    std::ifstream infile("/data/100x10x10/trade1",std::ios::in | std::ios::binary);
-    //std::ifstream infile("/data/team-10/my_ans/trade1",std::ios::in | std::ios::binary);
-    infile.read((char *)t, sizeof(trade) * lines);
-    infile.close();
+    int lines = 10000;
+    struct trade* t1 = new struct trade[lines];
+    struct trade* t2 = new struct trade[lines];
+    std::ifstream infile1("/data/100x1000x1000/trade1",std::ios::in | std::ios::binary);
+    std::ifstream infile2("/data/team-10/my_ans_large/trade1",std::ios::in | std::ios::binary);
+    infile1.read((char *)t1, sizeof(trade) * lines);
+    infile1.close();
+    infile2.read((char *)t2, sizeof(trade) * lines);
+    infile2.close();
     int L = 0;
-    for(int i = L; i < L + 40; ++i){
-        printf("%d %d %d %lf %d\n",
-        (t+i)->stk_code, (t+i)->bid_id, (t+i)->ask_id,
-        (t+i)->price, (t+i)->volume);
+    int xx = 6000;
+    for(int i = L; i < L + xx; ++i){
+        trade tmp1 = *(t1 + i);
+        trade tmp2 = *(t2 + i);
+        if (tmp1.volume != tmp2.volume || 
+        tmp1.bid_id != tmp2.bid_id || tmp1.ask_id != tmp2.ask_id ||
+        i % 1000000 == 0) {
+            printf("%d %d %d %lf %d\n",
+            (t1+i)->stk_code, (t1+i)->bid_id, (t1+i)->ask_id,
+            (t1+i)->price, (t1+i)->volume);
+            printf("%d %d %d %lf %d\n",
+            (t2+i)->stk_code, (t2+i)->bid_id, (t2+i)->ask_id,
+            (t2+i)->price, (t2+i)->volume);
+        }
     }
     return 0;
 }
