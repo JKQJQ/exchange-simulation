@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+struct-read
+include/
+read_ans
+cuo
+read_stock
+read_trade
