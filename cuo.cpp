@@ -9,13 +9,12 @@
 #include <unistd.h>
 #include "common.h"
 #include <fstream>
-
 using namespace std;
 /// config var
 namespace cuo {
-int lines = 10000; // for example, 1000 * 10 * 10, every stock has 100 * 10 * 10 lines
-string prev_file = "/data/team-10/trade_merge/prev_price";
-string hook_file = "/data/team-10/hook.h5";
+int lines = 100000000; // for example, 100 * 100 * 100, every stock has 100 * 10 * 10 lines
+string prev_file = "/data/team-10/large/trade_merge/prev_price";
+string hook_file = "/data/team-10/large/hook.h5";
 int ptr[10] = {0};
 int *hook_read = new int [10 * 100 * 4];
 map<int, special_info> special_hook[10];
@@ -28,20 +27,27 @@ void process_hook(int * hook) {
             auto order_id = *(hook + fd);
             fd ++;
             auto target_stk = *(hook + fd);
+            target_stk --;
             fd ++;
             auto target_trade = *(hook + fd);
             fd ++;
             auto arg = *(hook + fd);
             special_info tmp = {target_stk, target_trade, arg};
-            //tmp.target_stk = target_stk;
             special_hook[i][order_id] = tmp;
-            //cout << "save hook: " << i << " " << order_id << " " << target_stk << " " << target_trade << " " << arg << endl;
+            //if(i == 0)cout << "save hook: " << i << " " << order_id << " " << target_stk << " " << target_trade << " " << arg << endl;
         }
     }
     cout << "finish process hook into special map" << endl;
 }
 
 void init_config() {
+
+    /// clear map
+    for (int i = 0; i < 10; ++i) {
+        special_hook[i].clear();
+        matcher::bids[i].clear();
+        matcher::asks[i].clear();
+    }
 
     /// get hook data
     save_hook_data(hook_read, hook_file);
@@ -74,12 +80,6 @@ void init_config() {
     }
     cout << "finish save prev price" << endl;
 
-    /// clear map
-    for (int i = 0; i < 10; ++i) {
-        special_hook[i].clear();
-        matcher::bids[i].clear();
-        matcher::asks[i].clear();
-    }
 }
 
 void save_order_from_file(const string& filename, struct order* t) {
@@ -97,17 +97,21 @@ int get_cvl_from_trade(int stk, int id) {
     return the_trade.volume;
 }
 
-bool use_hook(order& my_order) {
+int use_hook(order& my_order) {
     unsigned char ch = my_order.combined;
-    int stk_code = (ch >> 4) & 15; stk_code --;
+    int stk_code = (ch >> 4) & 15; //stk_code --;
+    if (special_hook[stk_code].count(my_order.order_id) <= 0) {
+        cout << "error special hook: " << stk_code << " " << my_order.order_id << endl;
+        exit(0);
+    }
     auto each = special_hook[stk_code][my_order.order_id];
     int stk = each.target_stk;
     int id = each.target_trade;
     int arg = each.arg;
-    cout << "special order " << stk_code << " " << my_order.order_id << " " << stk<< " " << id;
-    if (id >= matcher::ans[stk].size()) {
-        cout << "DEBUG: order need wait " << stk_code << " "
-        << stk << " " << id << endl;
+    // cout << "special order " << stk_code << " " << my_order.order_id << " " << stk<< " " << id << endl;
+    if (id > matcher::ans[stk].size()) {
+         // cout << "DEBUG: order need wait " << stk_code << " "
+         // << stk << " " << id << endl;
         return 1;
     } else {
         int cvl = get_cvl_from_trade(stk, id);
@@ -126,20 +130,26 @@ void start_cuo() {
     order* t[10] = {nullptr};
     for (int i = 0; i < 10; ++i) {
         t[i] = new struct order[lines];
-        string filename = "/data/team-10/trade_merge/stock" + to_string(i);
+        string filename = "/data/team-10/large/trade_merge/stock" + to_string(i);
         save_order_from_file(filename, t[i]);
         ptr[i] = 0;
     }
     cout << "LOG: finish reading stock" << endl;
+
     while (1) {
         int processed = 0;
         for (int i = 0; i < 10; ++i) {
             if (ptr[i] >= lines) {
+                processed ++;
                 continue;
             }
             bool need_process = false;
             order each = *(t[i] + ptr[i]);
+            unsigned char ch = each.combined;
+            int stk_code = (ch >> 4) & 15; //stk_code --;
+            assert(i == stk_code);
             if (special_hook[i].count(each.order_id)) {
+                //cout << " use hook: " << i << " " << stk_code << " " << each.order_id << endl;
                 int ret = use_hook(each);
                 if (ret == 1) {
                     // need wait
@@ -158,10 +168,9 @@ void start_cuo() {
                 matcher::process_order(t[i] + ptr[i]);
                 //cout << " ptr[i]: " << i << " " << ptr[i] << endl;
                 ptr[i] ++;
-                processed ++;
             }
         }
-        if (processed == 0) break;
+        if (processed == 10) break;
     }
     cout << "LOG: finish cuo! " << endl;
     return;

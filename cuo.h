@@ -5,8 +5,9 @@
 #include <vector>
 #include <cmath>
 #include <fstream>
+#include <unordered_map>
 #include "common.h"
-
+#define medium large
 #define inf 2000000000
 using namespace std;
 namespace matcher {
@@ -15,6 +16,7 @@ unsigned int stk_code;
 int dir, type, quota, old_price;
 bool isLeave;
 map < pair<int, int>, int > bids[11], asks[11];
+unordered_map<int, int> levels;
 int prev_high[11], prev_low[11];
 vector<trade> ans[10];
 
@@ -74,7 +76,7 @@ int get_a_price(int price) {
     }
     if (type == 3) {
         // 最优五档, 对手方, TODO
-        quota = 5;
+        quota = inf;
         isLeave = false;
         return (dir == 1)? get_best_ask(): get_best_bid();
     }
@@ -92,21 +94,30 @@ int get_a_price(int price) {
         if (cvl >= volume) {
             return (dir == 1)? get_best_ask(): get_best_bid();
         } else {
-            cout << "LOG: can not eat all " << stk_code << " " << order_id << " " << endl;
+            //cout << "LOG: can not eat all " << stk_code << " " << order_id << " " << endl;
             return -1;
         }
     }
     return 0;
 }
 
-void make_trade(int asn1, int asn2, int price, int trade_qty) {
+void make_trade(int asn1, int asn2, int price, int& trade_qty) {
     // 写二进制文件
     // std::ifstream infile(prev_file, std::ios::out | std::ios::binary);
-    string filename = "/data/team-10/my_ans/trade" + to_string(stk_code + 1);
+    if (type == 3) {
+        levels[price] ++;
+        if (levels.size() >= 6) {
+            quota = 0;
+            trade_qty = 0;
+            return;
+        }
+    }
+    string filename = "/data/team-10/my_ans_large/trade" + to_string(stk_code + 1);
     std::ofstream outfile;
     outfile.open(filename, ios::out | ios::binary| ios::app);
     if (!outfile.good()) {
         cout << " error: outfile not good" << endl;
+        trade_qty = 0;
         return;
     }
     if (trade_qty <= 0) return;
@@ -115,7 +126,7 @@ void make_trade(int asn1, int asn2, int price, int trade_qty) {
     ans[stk_code].push_back(tmp);
     outfile.write(reinterpret_cast<const char*>(&tmp), sizeof(tmp));
     outfile.close();
-    if (stk_code == 0) cout << "ans: " << stk_code + 1 << " "<<  asn1 << " " << asn2 << " " << (double)price/100 << " " << trade_qty << endl;
+    //if (stk_code == 0) cout << "ans: " << stk_code + 1 << " "<<  asn1 << " " << asn2 << " " << (double)price/100 << " " << trade_qty << endl;
 }
 
 void start_trading(int order_price,
@@ -168,7 +179,7 @@ void process_order(struct order* t) {
     type = (ch & 7);
     stk_code = (ch >> 4) & 15;
     //stk_code --;
-    if (stk_code == 0) cout << "debug order: " << stk_code << " " << order_id << " "
+    if (order_id % 1000000 == 0) cout << "debug order: " << stk_code << " " << order_id << " "
          << price << " " << volume << " " << type << " " << dir << endl;
     quota = 1;
     auto order_price = get_a_price(price);
@@ -182,6 +193,7 @@ void process_order(struct order* t) {
     }
 
     auto old_volume = -1;
+    levels.clear();
     while (quota > 0 && volume != old_volume) {
         old_volume = volume;
         start_matching(order_price, isLeave);
