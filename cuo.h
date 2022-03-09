@@ -146,7 +146,9 @@ inline void start_trading(int order_price,
             volume -= cvl;
             (*it).second -= cvl;
         }
-        it ++;
+        if ((*it).second == 0) {
+            it = ask.erase(it);
+        } else it ++;
         if (volume == 0) return;
     }
 }
