@@ -20,7 +20,7 @@ unordered_map<int, int> levels;
 int prev_high[11], prev_low[11];
 vector<trade> ans[10];
 
-long long get_cvl(map < pair<int, int>, int >& bid) {
+inline long long get_cvl(map < pair<int, int>, int >& bid) {
     long long ret = 0;
     for (auto& each: bid) {
         ret += each.second;
@@ -29,7 +29,7 @@ long long get_cvl(map < pair<int, int>, int >& bid) {
 }
 
 
-int get_best_ask() {
+inline int get_best_ask() {
     auto& ask = asks[stk_code];
     for (auto it = ask.begin(); it != ask.end(); ) {
         while (it != ask.end() && (*it).second <= 0) {
@@ -41,7 +41,7 @@ int get_best_ask() {
     return 0;
 }
 
-int get_best_bid() {
+inline int get_best_bid() {
     auto& bid = bids[stk_code];
     // return abs(price)
     for (auto it = bid.begin(); it != bid.end(); ) {
@@ -54,7 +54,7 @@ int get_best_bid() {
     return 0;
 }
 
-int get_a_price(int price) {
+inline int get_a_price(int price) {
     /*
       return a price >= 0, -1 means price invalid
     */
@@ -101,7 +101,7 @@ int get_a_price(int price) {
     return 0;
 }
 
-void make_trade(int asn1, int asn2, int price, int& trade_qty) {
+inline void make_trade(int asn1, int asn2, int price, int& trade_qty) {
     // 写二进制文件
     // std::ifstream infile(prev_file, std::ios::out | std::ios::binary);
     if (type == 3) {
@@ -126,10 +126,9 @@ void make_trade(int asn1, int asn2, int price, int& trade_qty) {
     ans[stk_code].push_back(tmp);
     outfile.write(reinterpret_cast<const char*>(&tmp), sizeof(tmp));
     outfile.close();
-    //if (stk_code == 0) cout << "ans: " << stk_code + 1 << " "<<  asn1 << " " << asn2 << " " << (double)price/100 << " " << trade_qty << endl;
 }
 
-void start_trading(int order_price,
+inline void start_trading(int order_price,
                    map < pair<int, int>, int >& ask) {
     for (auto it = ask.begin(); it != ask.end(); ) {
         while (it != ask.end() && (*it).second <= 0) {
@@ -157,7 +156,6 @@ void start_matching(int order_price, bool isLeave) {
     else  start_trading(-order_price, bids[stk_code]);
     if (isLeave && volume > 0) {
         auto p = make_pair(order_price, order_id);
-        // cout << "insert " << stk_code << " " << order_price << " " << order_id << endl;
         if (dir == 1) {
             // is buy
             p.first *= -1;
@@ -185,7 +183,6 @@ void process_order(struct order* t) {
     auto order_price = get_a_price(price);
     if (order_price == 0) {
         order_price = price;
-        //std::cout << "debug: price zero, drop " << stk_code << " " << order_id << std::endl;
         return;
     }
     if (order_price == -1) {

@@ -13,10 +13,15 @@ using namespace std;
 /// config var
 namespace cuo {
 int lines = 100000000; // for example, 100 * 100 * 100, every stock has 100 * 10 * 10 lines
+int chunk_lines = 1000000;
+int end_id = 100;
 string prev_file = "/data/team-10/large/trade_merge/prev_price";
 string hook_file = "/data/team-10/large/hook.h5";
 int ptr[10] = {0};
+int finish_read[10] = {0};
 int *hook_read = new int [10 * 100 * 4];
+order* data[10] = {nullptr};
+std::ifstream infile[10];
 map<int, special_info> special_hook[10];
 
 void process_hook(int * hook) {
@@ -47,6 +52,11 @@ void init_config() {
         special_hook[i].clear();
         matcher::bids[i].clear();
         matcher::asks[i].clear();
+        matcher::ans[i].reserve(10000);
+        finish_read[i] = 0;
+        data[i] = new struct order[chunk_lines];
+        string filename = "/data/team-10/large/trade_merge/stock" + to_string(i);
+        infile[i].open(filename, std::ios::in | std::ios::binary);
     }
 
     /// get hook data
@@ -82,17 +92,17 @@ void init_config() {
 
 }
 
-void save_order_from_file(const string& filename, struct order* t) {
-    std::ifstream infile(filename, std::ios::in | std::ios::binary);
-    while(!infile.good()) {
+void save_order_from_file(const string& filename, struct order* t, int stk) {
+
+    while(!infile[stk].good()) {
         cout << " cannot find " << filename << " , sleep 2s " << endl;
         sleep(2);
     }
-    infile.read((char *)t, sizeof(order) * lines);
-    infile.close();
+    infile[stk].read((char *)t, sizeof(order) * chunk_lines);
+    finish_read[stk] ++;
 }
 
-int get_cvl_from_trade(int stk, int id) {
+inline int get_cvl_from_trade(int stk, int id) {
     auto& the_trade = matcher::ans[stk][id - 1];
     return the_trade.volume;
 }
@@ -108,10 +118,7 @@ int use_hook(order& my_order) {
     int stk = each.target_stk;
     int id = each.target_trade;
     int arg = each.arg;
-    // cout << "special order " << stk_code << " " << my_order.order_id << " " << stk<< " " << id << endl;
     if (id > matcher::ans[stk].size()) {
-         // cout << "DEBUG: order need wait " << stk_code << " "
-         // << stk << " " << id << endl;
         return 1;
     } else {
         int cvl = get_cvl_from_trade(stk, id);
@@ -125,26 +132,32 @@ int use_hook(order& my_order) {
     }
 }
 
+void read_block(int stk) {
+    string filename = "/data/team-10/large/trade_merge/stock" + to_string(stk);
+    save_order_from_file(filename, data[stk], stk);
+    ptr[stk] = 0;
+}
+
 void start_cuo() {
     cout << "LOG: start cuo" << endl;
-    order* t[10] = {nullptr};
     for (int i = 0; i < 10; ++i) {
-        t[i] = new struct order[lines];
-        string filename = "/data/team-10/large/trade_merge/stock" + to_string(i);
-        save_order_from_file(filename, t[i]);
-        ptr[i] = 0;
+        read_block(i);
     }
-    cout << "LOG: finish reading stock" << endl;
+    cout << "LOG: finish reading stock -- first chunk" << endl;
 
     while (1) {
         int processed = 0;
         for (int i = 0; i < 10; ++i) {
-            if (ptr[i] >= lines) {
-                processed ++;
-                continue;
+            if (ptr[i] >= chunk_lines) {
+                if (finish_read[i] >= end_id ) {
+                    processed ++;
+                    continue;
+                } else {
+                    read_block(i);
+                }
             }
             bool need_process = false;
-            order each = *(t[i] + ptr[i]);
+            order each = *(data[i] + ptr[i]);
             unsigned char ch = each.combined;
             int stk_code = (ch >> 4) & 15; //stk_code --;
             assert(i == stk_code);
@@ -165,7 +178,7 @@ void start_cuo() {
                 need_process = true;
             }
             if (need_process) {
-                matcher::process_order(t[i] + ptr[i]);
+                matcher::process_order(data[i] + ptr[i]);
                 //cout << " ptr[i]: " << i << " " << ptr[i] << endl;
                 ptr[i] ++;
             }
