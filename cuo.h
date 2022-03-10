@@ -112,20 +112,31 @@ inline void make_trade(int asn1, int asn2, int price, int& trade_qty) {
             return;
         }
     }
-    string filename = "/data/team-10/my_ans_large/trade" + to_string(stk_code + 1);
-    std::ofstream outfile;
-    outfile.open(filename, ios::out | ios::binary| ios::app);
-    if (!outfile.good()) {
-        cout << " error: outfile not good" << endl;
-        trade_qty = 0;
-        return;
-    }
     if (trade_qty <= 0) return;
     auto tmp = trade(
             stk_code + 1, asn1, asn2, (double)price/100, trade_qty);
     ans[stk_code].push_back(tmp);
-    outfile.write(reinterpret_cast<const char*>(&tmp), sizeof(tmp));
-    outfile.close();
+    return;
+
+
+}
+void write_trade() {
+    cout << " === start to write trade === " << endl;
+    for (int i = 0; i < 10; ++i) {
+        string filename = "/data/team-10/my_ans_large/trade" + to_string(i + 1);
+        std::ofstream outfile;
+        outfile.open(filename, ios::out | ios::binary | ios::trunc);
+        if (!outfile.good()) {
+            cout << " error: outfile not good" << endl;
+            return;
+        }
+        for (auto tmp: ans[i]) {
+            outfile.write(reinterpret_cast<const char*>(&tmp), sizeof(tmp));
+        }
+        outfile.close();
+        cout << " finish writing stock " << i << endl;
+    }
+
 }
 
 inline void start_trading(int order_price,
