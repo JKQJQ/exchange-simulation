@@ -123,8 +123,8 @@ int use_hook(order& my_order) {
     } else {
         int cvl = get_cvl_from_trade(stk, id);
         if (cvl > arg) {
-            cout << "DEBUG: cancell order" << stk_code << " "
-            << stk << " " << id << " " << arg << " " << cvl << endl;
+            // cout << "DEBUG: cancell order" << stk_code << " "
+            // << stk << " " << id << " " << arg << " " << cvl << endl;
             return 2;
         } else {
             return 3;
@@ -186,6 +186,7 @@ void start_cuo() {
         if (processed == 10) break;
     }
     cout << "LOG: finish cuo! " << endl;
+    matcher::write_trade();
     return;
 }
 
