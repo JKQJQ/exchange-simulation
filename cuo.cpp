@@ -15,7 +15,7 @@ namespace cuo {
 int lines = 100000000; // for example, 100 * 100 * 100, every stock has 100 * 10 * 10 lines
 int chunk_lines = 1000000;
 int end_id = 100;
-string prev_file = "/data/team-10/large/trade_merge/prev_price";
+string prev_file = "/data/team-10/large/order_merge/prev_price";
 string hook_file = "/data/team-10/large/hook.h5";
 int ptr[10] = {0};
 int finish_read[10] = {0};
@@ -55,7 +55,7 @@ void init_config() {
         matcher::ans[i].reserve(10000);
         finish_read[i] = 0;
         data[i] = new struct order[chunk_lines];
-        string filename = "/data/team-10/large/trade_merge/stock" + to_string(i);
+        string filename = "/data/team-10/large/order_merge/stock" + to_string(i);
         infile[i].open(filename, std::ios::in | std::ios::binary);
     }
 
@@ -133,7 +133,7 @@ int use_hook(order& my_order) {
 }
 
 void read_block(int stk) {
-    string filename = "/data/team-10/large/trade_merge/stock" + to_string(stk);
+    string filename = "/data/team-10/large/order_merge/stock" + to_string(stk);
     save_order_from_file(filename, data[stk], stk);
     ptr[stk] = 0;
 }
