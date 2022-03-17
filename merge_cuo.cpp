@@ -13,7 +13,7 @@ using namespace std;
 string size = "large/";
 /// config var
 namespace cuo {
-int lines = 100000000; // for example, 100 * 100 * 100, every stock has 100 * 10 * 10 lines
+int lines = 100000000; // for example, 100 * 1000 * 1000, every stock has 1e8 lines
 int chunk_lines = 1000000;
 int end_id = 100;
 string prev_file = "/data/team-10/" + size + "order1/prev_price";
@@ -40,7 +40,6 @@ void process_hook(int * hook) {
             auto arg = *(hook + fd);
             special_info tmp = {target_stk, target_trade, arg};
             special_hook[i][order_id] = tmp;
-            //if(i == 0)cout << "save hook: " << i << " " << order_id << " " << target_stk << " " << target_trade << " " << arg << endl;
         }
     }
     cout << "finish process hook into special map" << endl;
