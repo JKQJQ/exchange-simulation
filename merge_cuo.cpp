@@ -10,13 +10,14 @@
 #include "common.h"
 #include <fstream>
 using namespace std;
+string size = "large/";
 /// config var
 namespace cuo {
 int lines = 100000000; // for example, 100 * 100 * 100, every stock has 100 * 10 * 10 lines
 int chunk_lines = 1000000;
 int end_id = 100;
-string prev_file = "/data/team-10/large/order_merge/prev_price";
-string hook_file = "/data/team-10/large/hook.h5";
+string prev_file = "/data/team-10/" + size + "order1/prev_price";
+string hook_file = "/data/team-10/" + size + "order1/hook";
 int ptr[10] = {0};
 int finish_read[10] = {0};
 int *hook_read = new int [10 * 100 * 4];
@@ -55,19 +56,25 @@ void init_config() {
         matcher::ans[i].reserve(10000);
         finish_read[i] = 0;
         data[i] = new struct order[chunk_lines];
-        string filename = "/data/team-10/large/order_merge/stock" + to_string(i);
+        string filename = "/data/team-10/" + size + "order_merge/stock" + to_string(i + 1);
         infile[i].open(filename, std::ios::in | std::ios::binary);
     }
 
     /// get hook data
-    save_hook_data(hook_read, hook_file);
+    std::ifstream hookinfile(hook_file, std::ios::in | std::ios::binary);
+    while(!hookinfile.good()) {
+        cout << " cannot find " << hook_file << " , sleep 2s " << endl;
+        sleep(2);
+    }
+    cout << " file is good: " << hook_file << endl;
+    hookinfile.read((char *)hook_read, sizeof(int) * 10 * 100 * 4);
+    hookinfile.close();
     process_hook(hook_read);
 
     /// get prev close
-    auto filename = prev_file;
     std::ifstream infile(prev_file, std::ios::in | std::ios::binary);
     while(!infile.good()) {
-        cout << " cannot find " << filename << " , sleep 2s " << endl;
+        cout << " cannot find " << prev_file << " , sleep 2s " << endl;
         sleep(2);
     }
     cout << " file is good: " << prev_file << endl;
@@ -89,7 +96,6 @@ void init_config() {
         matcher::prev_low[i] = low_int;
     }
     cout << "finish save prev price" << endl;
-
 }
 
 void save_order_from_file(const string& filename, struct order* t, int stk) {
@@ -133,10 +139,11 @@ int use_hook(order& my_order) {
 }
 
 void read_block(int stk) {
-    string filename = "/data/team-10/large/order_merge/stock" + to_string(stk);
+    string filename = "/data/team-10/" + size + "order_merge/stock" + to_string(stk + 1);
     save_order_from_file(filename, data[stk], stk);
     ptr[stk] = 0;
 }
+
 
 void start_cuo() {
     cout << "LOG: start cuo" << endl;
