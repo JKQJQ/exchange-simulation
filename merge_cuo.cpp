@@ -10,14 +10,14 @@
 #include "common.h"
 #include <fstream>
 using namespace std;
-string size = "large/";
+string filesize = "large/";
 /// config var
 namespace cuo {
 int lines = 100000000; // for example, 100 * 1000 * 1000, every stock has 1e8 lines
 int chunk_lines = 1000000;
 int end_id = 100;
-string prev_file = "/data/team-10/" + size + "order1/prev_price";
-string hook_file = "/data/team-10/" + size + "order1/hook";
+string prev_file = "/data/team-10/" + filesize + "test2/prev_price";
+string hook_file = "/data/team-10/" + filesize + "test2/hook";
 int ptr[10] = {0};
 int finish_read[10] = {0};
 int *hook_read = new int [10 * 100 * 4];
@@ -55,7 +55,7 @@ void init_config() {
         matcher::ans[i].reserve(10000);
         finish_read[i] = 0;
         data[i] = new struct order[chunk_lines];
-        string filename = "/data/team-10/" + size + "order_merge/stock" + to_string(i + 1);
+        string filename = "/data/team-10/" + filesize + "order_merge/stock" + to_string(i + 1);
         infile[i].open(filename, std::ios::in | std::ios::binary);
     }
 
@@ -138,7 +138,7 @@ int use_hook(order& my_order) {
 }
 
 void read_block(int stk) {
-    string filename = "/data/team-10/" + size + "order_merge/stock" + to_string(stk + 1);
+    string filename = "/data/team-10/" + filesize + "order_merge/stock" + to_string(stk + 1);
     save_order_from_file(filename, data[stk], stk);
     ptr[stk] = 0;
 }

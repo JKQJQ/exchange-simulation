@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include<malloc.h> 
 #include "common.h"
+
 #define medium large
 #define inf 2000000000
 using namespace std;
@@ -16,6 +17,7 @@ int order_id, price, volume;
 unsigned int stk_code;
 int dir, type, quota, old_price;
 bool isLeave;
+
 map < pair<int, int>, int > bids[11], asks[11];
 unordered_map<int, int> levels;
 int prev_high[11], prev_low[11];
@@ -34,7 +36,7 @@ inline int get_best_ask() {
     auto& ask = asks[stk_code];
     for (auto it = ask.begin(); it != ask.end(); ) {
         while (it != ask.end() && (*it).second <= 0) {
-            it  = ask.erase(it); malloc_trim(0);
+            it  = ask.erase(it); //malloc_trim(0);
         }
         if (it != ask.end()) return (*it).first.first;
         else return 0;
@@ -47,7 +49,7 @@ inline int get_best_bid() {
     // return abs(price)
     for (auto it = bid.begin(); it != bid.end(); ) {
         while (it != bid.end() && (*it).second <= 0) {
-            it  = bid.erase(it); malloc_trim(0);
+            it  = bid.erase(it); //malloc_trim(0);
         }
         if (it != bid.end()) return -(*it).first.first;
         else return 0;
@@ -144,7 +146,7 @@ inline void start_trading(int order_price,
                    map < pair<int, int>, int >& ask) {
     for (auto it = ask.begin(); it != ask.end(); ) {
         while (it != ask.end() && (*it).second <= 0) {
-            it  = ask.erase(it); malloc_trim(0);
+            it  = ask.erase(it); //malloc_trim(0);
         }
         if (it == ask.end()) return;
         auto duifang_price = (*it).first.first;
@@ -159,7 +161,7 @@ inline void start_trading(int order_price,
             (*it).second -= cvl;
         }
         if ((*it).second == 0) {
-            it = ask.erase(it); malloc_trim(0);
+            it = ask.erase(it); //malloc_trim(0);
         } else it ++;
         if (volume == 0) return;
     }
