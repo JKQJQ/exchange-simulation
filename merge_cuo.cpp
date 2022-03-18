@@ -10,14 +10,22 @@
 #include "common.h"
 #include <fstream>
 using namespace std;
-string filesize = "large/";
+
+//////////// FILE PATH ///////////////
+string prev_file = "";
+string hook_file = "";
+string input_path = "";
+string output_path = "";
+//string filename = "/data/team-10/" + filesize + "order_merge/stock" + to_string(i + 1);
+//string filename = "/data/team-10/" + filesize + "order_merge/stock" + to_string(stk + 1);
+string filename[10];
+////////////// END ////////////////
 /// config var
 namespace cuo {
-int lines = 100000000; // for example, 100 * 1000 * 1000, every stock has 1e8 lines
-int chunk_lines = 1000000;
-int end_id = 100;
-string prev_file = "/data/team-10/" + filesize + "test2/prev_price";
-string hook_file = "/data/team-10/" + filesize + "test2/hook";
+const int lines = 100000000; // for example, 100 * 1000 * 1000, every stock has 1e8 lines
+const int end_id = 100;
+int chunk_lines = lines / end_id;
+
 int ptr[10] = {0};
 int finish_read[10] = {0};
 int *hook_read = new int [10 * 100 * 4];
@@ -55,8 +63,8 @@ void init_config() {
         matcher::ans[i].reserve(10000);
         finish_read[i] = 0;
         data[i] = new struct order[chunk_lines];
-        string filename = "/data/team-10/" + filesize + "order_merge/stock" + to_string(i + 1);
-        infile[i].open(filename, std::ios::in | std::ios::binary);
+
+        infile[i].open(filename[i], std::ios::in | std::ios::binary);
     }
 
     /// get hook data
@@ -138,8 +146,7 @@ int use_hook(order& my_order) {
 }
 
 void read_block(int stk) {
-    string filename = "/data/team-10/" + filesize + "order_merge/stock" + to_string(stk + 1);
-    save_order_from_file(filename, data[stk], stk);
+    save_order_from_file(filename[stk], data[stk], stk);
     ptr[stk] = 0;
 }
 
@@ -192,14 +199,40 @@ void start_cuo() {
         if (processed == 10) break;
     }
     cout << "LOG: finish cuo! " << endl;
-    matcher::write_trade();
+    matcher::write_trade(output_path);
     return;
 }
 
 
 } // namespace cuo
 
-int main() {
+int main(int argc, char **argv) {
+
+    input_path = argv[1];
+    output_path = argv[2];
+    assert(argc == 3);
+    assert(input_path.size() > 0);
+    assert(output_path.size() > 0);
+    if (input_path.back() != '/') input_path += "/";
+    if (output_path.back() != '/') output_path += "/";
+    prev_file = input_path + "prev_price";
+    hook_file = input_path + "hook";
+    for (int i = 0; i < 10; ++i) {
+        filename[i] = input_path + "stock" + to_string(i + 1);
+    }
+    cout << prev_file << endl;
+    cout << hook_file << endl;
+     for (int i = 0; i < 10; ++i) {
+         cout << filename[i] << endl;
+     }
+     cout << output_path << endl;
+    // return 0;
+    assert(prev_file.size() > 0);
+    assert(hook_file.size() > 0);
+    assert(output_path.size() > 0);
+    for (int i = 0; i < 10; ++i) {
+        assert(filename[i].size() > 0);
+    }
     cuo::init_config();
     cuo::start_cuo();
     return 0;

@@ -123,10 +123,10 @@ inline void make_trade(int asn1, int asn2, int price, int& trade_qty) {
 
 
 }
-void write_trade() {
+void write_trade(string output_path) {
     cout << " === start to write trade === " << endl;
     for (int i = 0; i < 10; ++i) {
-        string filename = "/data/team-10/my_ans_large/trade" + to_string(i + 1);
+        string filename = output_path + "trade" + to_string(i + 1);
         std::ofstream outfile;
         outfile.open(filename, ios::out | ios::binary | ios::trunc);
         if (!outfile.good()) {
