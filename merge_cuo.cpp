@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include "common.h"
 #include <fstream>
+#include <filesystem>
 using namespace std;
 
 //////////// FILE PATH ///////////////
@@ -68,6 +69,10 @@ void init_config() {
     }
 
     /// get hook data
+    while(!filesystem::exists(std::filesystem::path(hook_file))) {
+          cout << hook_file << " doesn't exist, waiting...\n" << endl;
+          sleep(2);
+    }
     std::ifstream hookinfile(hook_file, std::ios::in | std::ios::binary);
     while(!hookinfile.good()) {
         cout << " cannot find " << hook_file << " , sleep 2s " << endl;
@@ -79,16 +84,20 @@ void init_config() {
     process_hook(hook_read);
 
     /// get prev close
-    std::ifstream infile(prev_file, std::ios::in | std::ios::binary);
-    while(!infile.good()) {
+    while(!filesystem::exists(std::filesystem::path(prev_file))) {
+        cout << prev_file << " doesn't exist, waiting...\n" << endl;
+        sleep(2);
+    }
+    std::ifstream previnfile(prev_file, std::ios::in | std::ios::binary);
+    while(!previnfile.good()) {
         cout << " cannot find " << prev_file << " , sleep 2s " << endl;
         sleep(2);
     }
     cout << " file is good: " << prev_file << endl;
     int* t = new int[10];
     int tmp = 0;
-    infile.read((char *)t, sizeof(tmp) * 10);
-    infile.close();
+    previnfile.read((char *)t, sizeof(tmp) * 10);
+    previnfile.close();
     cout << "start to save prev_high prev_low " << endl;
 
     for (int i = 0; i < 10; ++i) {
