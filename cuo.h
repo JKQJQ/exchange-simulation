@@ -117,7 +117,8 @@ inline void make_trade(int asn1, int asn2, int price, int& trade_qty) {
     }
     if (trade_qty <= 0) return;
     auto tmp = trade(
-            stk_code + 1, asn1, asn2, (double)price/100, trade_qty);
+            stk_code + 1, asn1, asn2, price, trade_qty);
+    //      stk_code + 1, asn1, asn2, (double)price/100, trade_qty);       
     ans[stk_code].push_back(tmp);
     return;
 
@@ -134,7 +135,9 @@ void write_trade(string output_path) {
             return;
         }
         for (auto tmp: ans[i]) {
-            outfile.write(reinterpret_cast<const char*>(&tmp), sizeof(tmp));
+            //outfile.write(reinterpret_cast<const char*>(&tmp), sizeof(tmp));
+            OutputTrade output_trade = OutputTrade((int)tmp.stk_code, tmp.bid_id, tmp.ask_id, (double)tmp.price/100, tmp.volume);
+            outfile.write(reinterpret_cast<const char*>(&output_trade), sizeof(OutputTrade));
         }
         outfile.close();
         cout << " finish writing stock " << i << endl;

@@ -17,9 +17,9 @@ string hook_file = "";
 string input_path = "";
 string output_path = "";
 //string filename = "/data/team-10/" + filesize + "order_merge/stock" + to_string(i + 1);
-//string filename = "/data/team-10/" + filesize + "order_merge/stock" + to_string(stk + 1);
 string filename[10];
 ////////////// END ////////////////
+
 /// config var
 namespace cuo {
 const int lines = 100000000; // for example, 100 * 1000 * 1000, every stock has 1e8 lines

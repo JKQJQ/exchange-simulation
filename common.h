@@ -7,13 +7,23 @@ const int RANK_OUT = 3;
 using namespace std;
 //using namespace H5;
 
-struct trade {
+struct OutputTrade {
     int stk_code;
     int bid_id;
     int ask_id;
     double price;
     int volume;
-    trade(int a, int b, int c, double d, int e) :
+    OutputTrade(int a, int b, int c, double d, int e) :
+    stk_code(a), bid_id(b), ask_id(c), price(d), volume(e) {}
+}__attribute__((packed));
+
+struct trade {
+    unsigned char stk_code;
+    int bid_id;
+    int ask_id;
+    int price;
+    int volume;
+    trade(unsigned char a, int b, int c, int d, int e) :
     stk_code(a), bid_id(b), ask_id(c), price(d), volume(e) {}
 }__attribute__((packed));
 
